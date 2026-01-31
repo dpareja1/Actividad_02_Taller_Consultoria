@@ -17,7 +17,7 @@ def procesar_transacciones(ruta_transacciones,df_inventario,df_feedback):
     cols_texto = df_transacciones.select_dtypes(include=['object', 'string']).columns
     df_transacciones[cols_texto] = df_transacciones[cols_texto].apply(lambda x: x.str.lower())
     
-    df_transacciones.loc[:,'Cantidad'] = df_transacciones.loc[:,'Cantidad'].abs()
+    df_transacciones.loc[:,'Cantidad_Vendida'] = df_transacciones.loc[:,'Cantidad_Vendida'].abs()
     
     
     #Rellenar estado df_feedback == archivo juan jose
