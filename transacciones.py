@@ -146,13 +146,7 @@ def procesar_transacciones(ruta_transacciones, df_inventario, df_feedback):
     )
 
     # ==========================================
-    # PASO 12: ELIMINACIÓN DE FILA PROBLEMÁTICA
-    # ==========================================
-    # Remover índice 0 (posible dato de prueba o erróneo)
-    df_transacciones.drop(0, inplace=True)
-
-    # ==========================================
-    # PASO 13: CÁLCULO DE FECHA CALCULADA
+    # PASO 12: CÁLCULO DE FECHA CALCULADA
     # ==========================================
     # Calcular fecha esperada de entrega
     # Formula: Fecha_Venta + Tiempo_Entrega_Real (en días)
@@ -164,7 +158,7 @@ def procesar_transacciones(ruta_transacciones, df_inventario, df_feedback):
     )
 
     # ==========================================
-    # PASO 14: IMPUTACIÓN LÓGICA - ESTADO_ENVIO
+    # PASO 13: IMPUTACIÓN LÓGICA - ESTADO_ENVIO
     # ==========================================
     # Paso 14a: Marcar como "entregado" (entregado)
     # Si la fecha calculada es menor a la fecha máxima del dataset
@@ -183,7 +177,7 @@ def procesar_transacciones(ruta_transacciones, df_inventario, df_feedback):
     ] = 'en camino'
     
     # ==========================================
-    # PASO 15: IMPUTACIÓN LÓGICA FINAL - CANTIDAD_VENDIDA
+    # PASO 14: IMPUTACIÓN LÓGICA FINAL - CANTIDAD_VENDIDA
     # ==========================================
 
     # Crear un mapeo del Costo Unitario
