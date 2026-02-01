@@ -41,19 +41,13 @@ def procesar_transacciones(ruta_transacciones, df_inventario, df_feedback):
     # Esto facilita comparaciones y evita inconsistencias
     cols_texto = df_transacciones.select_dtypes(include=['object', 'string']).columns
     df_transacciones[cols_texto] = df_transacciones[cols_texto].apply(lambda x: x.str.lower())
-    
+       
     # ==========================================
-    # PASO 3: CONVERSIÓN DE CANTIDAD_VENDIDA A POSITIVO
-    # ==========================================
-    # Valores negativos son errores de entrada, se convierten a positivos
-    df_transacciones.loc[:, 'Cantidad_Vendida'] = df_transacciones.loc[:, 'Cantidad_Vendida'].abs()
-    
-    # ==========================================
-    # PASO 4: IMPUTACIÓN CONDICIONAL DE ESTADO_ENVIO
+    # PASO 3: IMPUTACIÓN CONDICIONAL DE ESTADO_ENVIO
     # ==========================================
     # Estrategia: Usar información de feedback para inferir estado de envío
     
-    # Paso 4a: Transacciones SIN ticket de soporte -> "entregado"
+    # Paso 3a: Transacciones SIN ticket de soporte -> "entregado"
     # (clientes sin problemas, no abrieron ticket)
     transacciones_nps_no = df_feedback['Transaccion_ID'].unique()
     
@@ -62,7 +56,7 @@ def procesar_transacciones(ruta_transacciones, df_inventario, df_feedback):
     
     df_transacciones.loc[condicion_existe & condicion_vacio, 'Estado_Envio'] = 'entregado'
 
-    # Paso 4b: Transacciones CON ticket de soporte abierto -> "devuelto"
+    # Paso 3b: Transacciones CON ticket de soporte abierto -> "devuelto"
     # (clientes con problemas, abrieron ticket)
     transacciones_nps_si = df_feedback['Transaccion_ID'].unique()
     
@@ -72,7 +66,7 @@ def procesar_transacciones(ruta_transacciones, df_inventario, df_feedback):
     df_transacciones.loc[condicion_existe & condicion_vacio, 'Estado_Envio'] = 'devuelto'
 
     # ==========================================
-    # PASO 5: NORMALIZACIÓN DE CIUDADES DESTINO
+    # PASO 4: NORMALIZACIÓN DE CIUDADES DESTINO
     # ==========================================
     # Mapeo de abreviaturas a nombres completos
     dic_ciudades = {
@@ -82,7 +76,7 @@ def procesar_transacciones(ruta_transacciones, df_inventario, df_feedback):
     df_transacciones.replace(dic_ciudades, inplace=True)
 
     # ==========================================
-    # PASO 6: IMPUTACIÓN SELECTIVA DE COSTO_ENVIO
+    # PASO 5: IMPUTACIÓN SELECTIVA DE COSTO_ENVIO
     # ==========================================
     # Lógica de negocio: No hay envío en transacciones de canal físico (tienda)
     df_transacciones.loc[
@@ -91,7 +85,7 @@ def procesar_transacciones(ruta_transacciones, df_inventario, df_feedback):
     ] = 0
 
     # ==========================================
-    # PASO 7: FEATURE ENGINEERING - MÁRGENES
+    # PASO 6: FEATURE ENGINEERING - MÁRGENES
     # ==========================================
     # Crear métricas de rentabilidad
     
@@ -106,7 +100,7 @@ def procesar_transacciones(ruta_transacciones, df_inventario, df_feedback):
     )
 
     # ==========================================
-    # PASO 8: ENRIQUECIMIENTO - MERGE CON INVENTARIO
+    # PASO 7: ENRIQUECIMIENTO - MERGE CON INVENTARIO
     # ==========================================
     # Traer información de bodega del inventario
     # Left join: Mantener todas las transacciones, agregar bodega si existe
@@ -117,7 +111,7 @@ def procesar_transacciones(ruta_transacciones, df_inventario, df_feedback):
     )
 
     # ==========================================
-    # PASO 9: CREACIÓN DE IDENTIFICADOR GRUPAL
+    # PASO 8: CREACIÓN DE IDENTIFICADOR GRUPAL
     # ==========================================
     # Crear ID único para cada ruta bodega-ciudad
     # Útil para imputación de tiempos y costos por ruta
@@ -126,7 +120,7 @@ def procesar_transacciones(ruta_transacciones, df_inventario, df_feedback):
     )
 
     # ==========================================
-    # PASO 10: IMPUTACIÓN GRUPAL - TIEMPO_ENTREGA_REAL
+    # PASO 9: IMPUTACIÓN GRUPAL - TIEMPO_ENTREGA_REAL
     # ==========================================
     # Llenar nulos con la mediana del grupo bodega-ciudad
     # Esto mantiene consistencia de tiempos por ruta
@@ -137,7 +131,7 @@ def procesar_transacciones(ruta_transacciones, df_inventario, df_feedback):
     )
 
     # ==========================================
-    # PASO 11: IMPUTACIÓN GRUPAL - COSTO_ENVIO
+    # PASO 10: IMPUTACIÓN GRUPAL - COSTO_ENVIO
     # ==========================================
     # Llenar nulos con la mediana del grupo bodega-ciudad
     # Mantiene costos realistas por ruta
@@ -146,7 +140,7 @@ def procesar_transacciones(ruta_transacciones, df_inventario, df_feedback):
     )
 
     # ==========================================
-    # PASO 12: CÁLCULO DE FECHA CALCULADA
+    # PASO 11: CÁLCULO DE FECHA CALCULADA
     # ==========================================
     # Calcular fecha esperada de entrega
     # Formula: Fecha_Venta + Tiempo_Entrega_Real (en días)
@@ -158,9 +152,9 @@ def procesar_transacciones(ruta_transacciones, df_inventario, df_feedback):
     )
 
     # ==========================================
-    # PASO 13: IMPUTACIÓN LÓGICA - ESTADO_ENVIO
+    # PASO 12: IMPUTACIÓN LÓGICA - ESTADO_ENVIO
     # ==========================================
-    # Paso 14a: Marcar como "entregado" (entregado)
+    # Paso 12a: Marcar como "entregado" (entregado)
     # Si la fecha calculada es menor a la fecha máxima del dataset
     # Significa que debería haber llegado ya
     df_transacciones.loc[
@@ -168,7 +162,7 @@ def procesar_transacciones(ruta_transacciones, df_inventario, df_feedback):
         'Estado_Envio'
     ] = 'entregado'
     
-    # Paso 14b: Marcar como "en camino"
+    # Paso 12b: Marcar como "en camino"
     # Si la fecha calculada es mayor a la fecha máxima
     # Significa que aún está en tránsito (no debería haber llegado)
     df_transacciones.loc[
@@ -177,7 +171,7 @@ def procesar_transacciones(ruta_transacciones, df_inventario, df_feedback):
     ] = 'en camino'
     
     # ==========================================
-    # PASO 14: IMPUTACIÓN LÓGICA FINAL - CANTIDAD_VENDIDA
+    # PASO 13: IMPUTACIÓN LÓGICA FINAL - CANTIDAD_VENDIDA
     # ==========================================
 
     # Crear un mapeo del Costo Unitario
